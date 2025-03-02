@@ -1,6 +1,5 @@
-# Debix
-# Debix IB
-Debix is a virtual machine,its really cool with a mysterious and hacker theme.
-If you want to help or give Ideas join my dc and there you can ask me for perms to edit the Repo.
+# Debix/Debix IB
+Debix is a virtual machine, its really cool with a mysterious and good looking hacker theme.
+If you want to help us or give ideas join our discord and there can you apply for the Debix Team.
 
-Discord (forever link): https://discord.gg/rr67ZT8tqU
+Our Discord: https://discord.gg/rr67ZT8tqU
