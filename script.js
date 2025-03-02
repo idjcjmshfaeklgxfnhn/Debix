@@ -54,9 +54,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const stages = [
             'Initializing system core...',
             'Loading kernel modules...',
+            'holy yap...',
             'Starting system services...',
             'Mounting virtual drives...',
-            'Launching desktop environment...'
+            'yapping soon done...'
         ];
 
         let currentStage = 0;
@@ -181,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const browserContent = newWindow.querySelector('.browser-content');
 
             // Browser navigation history (simple mock)
-            let browserHistory = ['https://debix.net'];
+            let browserHistory = ['bing.com'];
             let currentHistoryIndex = 0;
 
             // Disable buttons initially based on history
@@ -236,19 +237,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
             function performSearch() {
                 const searchTerm = searchInput.value;
-                const searchUrl = `https://debix.net/search?q=${encodeURIComponent(searchTerm)}`;
+                const searchUrl = `https://bing.com/search?q=${encodeURIComponent(searchTerm)}`;
                 urlBar.value = searchUrl;
                 loadPage(searchUrl);
             }
 
             function loadPage(url) {
-                // Simulate page loading
-                browserContent.innerHTML = `
-                    <div class="welcome-page">
-                        <h2>Loading: ${url}</h2>
-                        <p>Connecting to Debix Network...</p>
-                    </div>
-                `;
+                // Clear the browser content
+                browserContent.innerHTML = '';
+
+                // Create an iframe element
+                const iframe = document.createElement('iframe');
+                iframe.src = url;
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = '2px solid #00ff00'; // Add a green border
+                iframe.style.borderRadius = '5px'; // Optional: Add rounded corners
+
+                // Append the iframe to the browser content
+                browserContent.appendChild(iframe);
+
+                // Wait for the iframe to load
+                iframe.onload = () => {
+                    // Access the iframe's content window
+                    const iframeWindow = iframe.contentWindow;
+
+                    // Add an event listener to intercept link clicks
+                    iframeWindow.document.addEventListener('click', (e) => {
+                        const target = e.target;
+
+                        // Check if the clicked element is a link
+                        if (target.tagName === 'A' && target.href) {
+                            e.preventDefault(); // Prevent the default behavior (opening in a new tab/window)
+
+                            // Close the current window
+                            newWindow.remove(); // Close the current window
+
+                            // Open a new window with the clicked link
+                            createWindow('New Browser Window', `<iframe src="${target.href}" style="width: 100%; height: 100%; border: none;"></iframe>`);
+
+
+                            // Update the URL bar
+                            urlBar.value = target.href;
+
+                            // Add to history if it's a new URL
+                            if (browserHistory[currentHistoryIndex] !== target.href) {
+                                // Remove any forward history
+                                browserHistory = browserHistory.slice(0, currentHistoryIndex + 1);
+                                browserHistory.push(target.href);
+                                currentHistoryIndex = browserHistory.length - 1;
+                            }
+
+                            // Update navigation buttons
+                            updateNavigationButtons();
+
+                        }
+                    });
+                };
 
                 // Add to history if it's a new URL
                 if (browserHistory[currentHistoryIndex] !== url) {
@@ -258,21 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     currentHistoryIndex = browserHistory.length - 1;
                 }
 
-                // Simulate page load with timeout
-                setTimeout(() => {
-                    browserContent.innerHTML = `
-                        <div class="welcome-page">
-                            <h1>Debix Network</h1>
-                            <p>Loaded: ${url}</p>
-                            <div class="quick-links">
-                                <div class="quick-link">📰 News</div>
-                                <div class="quick-link">🎵 Music</div>
-                                <div class="quick-link">🎮 Games</div>
-                            </div>
-                        </div>
-                    `;
-                }, 1000);
-
+                // Update navigation buttons
                 updateNavigationButtons();
             }
 
@@ -293,9 +324,6 @@ document.addEventListener('DOMContentLoaded', () => {
             'File Manager': () => {
                 createWindow('File Manager', `
                     <div class="file-manager">
-                        <div class="folder">📁 Documents</div>
-                        <div class="folder">📁 Pictures</div>
-                        <div class="folder">📁 Downloads</div>
                         <div class="file">📄 readme.txt</div>
                     </div>
                 `);
@@ -308,12 +336,70 @@ document.addEventListener('DOMContentLoaded', () => {
                 `);
             },
             'Terminal': () => {
-                createWindow('Terminal', `
+                const terminalWindow = createWindow('Terminal', `
                     <div class="terminal">
                         <p>Debix IB Terminal</p>
-                        <p>$ <span class="cursor"></span></p>
+                        <div class="terminal-output"></div>
+                        <div class="terminal-input">
+                            <span>$ </span>
+                            <input type="text" class="terminal-cmd" autofocus />
+                        </div>
                     </div>
                 `);
+
+                const terminalOutput = terminalWindow.querySelector('.terminal-output');
+                const terminalInput = terminalWindow.querySelector('.terminal-cmd');
+
+                // Function to handle command execution
+                function executeCommand(command) {
+                    // Clear the input field
+                    terminalInput.value = '';
+
+                    // Display the command in the terminal output
+                    const commandLine = document.createElement('p');
+                    commandLine.textContent = `$ ${command}`;
+                    terminalOutput.appendChild(commandLine);
+
+                    // Process the command
+                    let output;
+                    switch (command.trim()) {
+                        case 'help':
+                            output = `Available commands:
+                            - help: Show this help message
+                            - clear: Clear the terminal
+                            - echo [text]: Print text to the terminal
+                            - date: Show the current date and time`;
+                            break;
+                        case 'clear':
+                            terminalOutput.innerHTML = ''; // Clear the terminal output
+                            return; // No need to display output for "clear"
+                        case 'date':
+                            output = new Date().toString();
+                            break;
+                        default:
+                            if (command.startsWith('echo ')) {
+                                output = command.slice(5); // Remove "echo " from the command
+                            } else {
+                                output = `Command not found: ${command}`;
+                            }
+                    }
+
+                    // Display the output
+                    const outputLine = document.createElement('p');
+                    outputLine.textContent = output;
+                    terminalOutput.appendChild(outputLine);
+
+                    // Scroll to the bottom of the terminal
+                    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+                }
+
+                // Listen for the "Enter" key to execute commands
+                terminalInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        const command = terminalInput.value;
+                        executeCommand(command);
+                    }
+                });
             },
             'Settings': () => {
                 createWindow('Settings', `
@@ -322,14 +408,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             <h3>System Theme</h3>
                             <select>
                                 <option>Dark</option>
-                                <option>Light</option>
+                                
                             </select>
                         </div>
                         <div class="setting-item">
                             <h3>Language</h3>
                             <select>
                                 <option>English</option>
-                                <option>Spanish</option>
+                                
                             </select>
                         </div>
                     </div>
@@ -342,7 +428,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             <button class="nav-btn">←</button>
                             <button class="nav-btn">→</button>
                             <button class="nav-btn">↻</button>
-                            <input type="text" class="url-bar" placeholder="Enter URL..." value="https://debix.net">
+                            <input type="text" class="url-bar" placeholder="Enter URL..." value="https://bing.com">
                         </div>
                         <div class="browser-content">
                             <div class="welcome-page">
@@ -352,10 +438,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                     <button>Search</button>
                                 </div>
                                 <div class="quick-links">
-                                    <div class="quick-link">📰 News</div>
-                                    <div class="quick-link">📧 Mail</div>
-                                    <div class="quick-link">🎵 Music</div>
-                                    <div class="quick-link">🎮 Games</div>
+                                    <div class="quick-link">Debix IB</div>
+                                    
                                 </div>
                             </div>
                         </div>
